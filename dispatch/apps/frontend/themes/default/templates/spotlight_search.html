@@ -10,7 +10,7 @@
 
         #search-form {
             margin: 5px auto;
-            width: 500px;
+            width: 600px;
 
             //display: none;    /* initially */
 
@@ -45,14 +45,18 @@
         #search-results h3 {
             font-variant: small-caps;
             color: #777;
-            background-color: #ddd;
+            margin: 12px 0 6px;
         }
         #search-results ul {
             list-style: none;
             padding: 0;
+            margin-top: 5px;
         }
         #search-results li {
             margin-bottom: 10px;
+        }
+        #search-results li.selected {
+            background-color: #ddd;
         }
         #search-results li p {
             margin: 0;
@@ -60,6 +64,12 @@
         #search-results li .date {
             font-size: smaller;
             color: #777;
+        }
+
+        #search-preview {
+            display: none;
+            width: 28%;
+            vertical-align: top;
         }
 
         </style>
@@ -91,8 +101,9 @@
 
 
         <form id="search-form">
-            <input type="text" id="search-qbar"/>
+            <input type="text" id="search-qbar" placeholder="Search"/>
             <div id="search-results"></div>
+            <div id="search-preview"></div>
         </form>
 
 
@@ -108,17 +119,23 @@
                     articles: [
                         {
                             long_headline: "Buchanan Tower Voted Ugliest In The Land",
-                            date: "2015-01-07T14:48:01-0800"
+                            date: "2015-01-07T14:48:01-0800",
+                            uri: "/article/buto-voted-ugliest",
+                            preview: "This disorienting nature of the Stream is a direct consequence of Manuel Castells’ concept of the space of flows"
                         },
                         {
                             long_headline: "You'll Never Guess What Toope Just Said",
-                            date: "2014-11-18T09:31:16-0800"
+                            date: "2014-11-18T09:31:16-0800",
+                            uri: "/article/toope-said-what",
+                            preview: "This lack of enumerated pages emphasises the timelessness and lack of fixed markers in the (near-)infinite digital cultural space"
                         }
                     ],
                     videos: [
                         {
                             title: "Weekly Show, Jan. 19th",
-                            date: "2015-01-18T20:04:53-0800"
+                            date: "2015-01-18T20:04:53-0800",
+                            uri: "/video/weekly-show/2015-01-19",
+                            preview: "[Video]"
                         }
                     ]
                 };
@@ -129,16 +146,38 @@
             self.search = (function(self) {
                 var searchform = $("#search-form"),
                     searchbar = $("#search-qbar"),
-                    resultsbox = $("#search-results");
+                    resultsbox = $("#search-results"),
+                    previewbox = $("#search-preview");
 
                 var URI_SEARCH = "/api/search";
 
                 var KEYCODE_ENTER = 13,
                     KEYCODE_ESC = 27;
 
+                var result_focus_handler = function(evt) {
+                    var t = $(evt.target),
+                        li = t.is("li") ? t : t.closest("li");
+
+                    resultsbox.find("li.selected").removeClass("selected");
+                    li.addClass("selected");
+
+                    previewbox.empty();
+
+                    $("<p/>")
+                        .text(li.data("preview"))
+                        .appendTo(previewbox);
+                };
+                var result_blur_handler = function(evt) {
+                    var t = $(evt.target),
+                        li = t.is("li") ? t : t.closest("li");
+
+                    li.removeClass("selected");
+                };
+
                 var response_handler = function(resp) {
                     resultsbox.empty();
-                    resultsbox.show();
+                    resultsbox.css("display", "inline-block");
+                    previewbox.css("display", "inline-block");
                     var parents = {
                         articles: $("<ul/>").appendTo(resultsbox),
                         videos: $("<ul/>").appendTo(resultsbox)
@@ -152,10 +191,17 @@
                         $.each(resp[k], function(i, result) {
                             $("<li/>")
                                 .append($("<p/>")
-                                    .text(result.long_headline || result.title))
+                                    .append($("<a/>")
+                                        .text(result.long_headline || result.title)
+                                        .focus(result_focus_handler)
+                                        .blur(result_blur_handler)
+                                        .attr("href", result.uri)))
                                 .append($("<p/>")
                                     .text(moment(result.date).fromNow())
                                     .addClass("date"))
+                                .data("preview", result.preview)
+                                .mouseover(result_focus_handler)
+                                .mouseout(result_blur_handler)
                                 .appendTo(el);
                         })
                     });
@@ -165,10 +211,12 @@
                     if (q) {
                         test_ajax(URI_SEARCH + "?q=" + encodeURIComponent(q),
                                   response_handler);
+                        previewbox.empty();
                     }
                     else {
                         resultsbox.empty();
                         resultsbox.hide();
+                        previewbox.hide();
                     }
                 };
 
@@ -192,7 +240,7 @@
                     $(document).click(function(evt) {
                         // Hide on click outside the #searchform
                         if (!$(evt.target).closest(searchform).length) {
-                            self.toggle();
+                            searchform.hide();
                         }
                     });
 
@@ -204,7 +252,7 @@
                         evt.preventDefault();
                     });
 
-                    searchbar.focus();
+                    searchbar.focus();  // for developing
                 }
 
                 return self;
