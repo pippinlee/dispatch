@@ -20,6 +20,7 @@
             right: 0;
 
             background-color: #f2f2f2;
+            box-shadow: 0 0 15px #222;
         }
         @media(max-width:500px) {
             #search-form {
@@ -32,13 +33,14 @@
             width: 100%;
             font-size: 2.4em;
             padding: .2em .3em;
+            box-sizing: border-box;
 
             border: 1px solid #bbb;
-            box-shadow: 0 0 15px #222;
         }
 
         #search-results {
             padding: 5px 15px;
+            display: none;
         }
         #search-results h3 {
             font-variant: small-caps;
@@ -68,6 +70,7 @@
 
     <body>
         <h1>dispatch blah blah</h1>
+        <h2><em>[Search is currently bound to the ESC key]</em></h2>
         <p>
         Lorem ipsum and etc and so on asdgaisg af if eai safiewf naeifsdf
         </p>
@@ -135,6 +138,7 @@
 
                 var response_handler = function(resp) {
                     resultsbox.empty();
+                    resultsbox.show();
                     var parents = {
                         articles: $("<ul/>").appendTo(resultsbox),
                         videos: $("<ul/>").appendTo(resultsbox)
@@ -162,6 +166,10 @@
                         test_ajax(URI_SEARCH + "?q=" + encodeURIComponent(q),
                                   response_handler);
                     }
+                    else {
+                        resultsbox.empty();
+                        resultsbox.hide();
+                    }
                 };
 
                 self.toggle = function() {
@@ -172,7 +180,6 @@
                         searchbar.focus();
                     }
                 };
-
 
                 self.init = function() {
                     // Listen for key to open searchbox
