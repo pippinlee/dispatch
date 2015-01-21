@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8"/>
+        <style>
+
+        body {
+            font-family: Helvetica, sans-serif;
+        }
+
+        #search-form {
+            margin: 5px auto;
+            width: 500px;
+
+            //display: none;    /* initially */
+
+            position: absolute;
+            top: 150px;
+            left: 0;
+            right: 0;
+
+            background-color: #f2f2f2;
+        }
+        @media(max-width:500px) {
+            #search-form {
+                width: 90%;
+            }
+        }
+
+        #search-qbar {
+
+            width: 100%;
+            font-size: 2.4em;
+            padding: .2em .3em;
+
+            border: 1px solid #bbb;
+            box-shadow: 0 0 15px #222;
+        }
+
+        #search-results {
+            padding: 5px 15px;
+        }
+        #search-results h3 {
+            font-variant: small-caps;
+            color: #777;
+            background-color: #ddd;
+        }
+        #search-results ul {
+            list-style: none;
+            padding: 0;
+        }
+        #search-results li {
+            margin-bottom: 10px;
+        }
+        #search-results li p {
+            margin: 0;
+        }
+        #search-results li .date {
+            font-size: smaller;
+            color: #777;
+        }
+
+        </style>
+    </head>
+
+
+
+
+    <body>
+        <h1>dispatch blah blah</h1>
+        <p>
+        Lorem ipsum and etc and so on asdgaisg af if eai safiewf naeifsdf
+        </p>
+        <p>
+        Characteristic of modern cities is the antagonism between the inherently solid physicality of the built city and the increasingly dominant liquid flows of transnational capital (Hern 2010; Short 2012). I argue that the user-interface concept of “infinite scroll” is a manifestation of this (digital) postmodern liquidity and disorientation, and a vast cultural sprawl in the sense of Debord’s spectacle, conceptualised and idealised as “the Stream.”
+        </p>
+        <p>
+        Mobile apps such as Instagram (photo- and short video-sharing), Facebook (social networking), Twitter (microblogging), and Tumblr (social networking and blogging), and many websites such as BuzzFeed and Time.com now display content in an “infinite stream” — the end of one item will be directly followed by the start of the next, in contrast to a more skeuomorphic, paginated paradigm. This lack of enumerated pages emphasises the timelessness and lack of fixed markers in the (near-)infinite digital cultural space: since 2007, “the amount of digital data created [per] year [has] exceeded the world’s data storage capacity” (McKinsey 16), and the proliferation of recording devices will only strengthen this trend.
+        </p>
+        <p>
+        Wandering in the Stream is necessarily transient, both in the sense that as an activity it is often indulged in passively, to “pass time”, but also because, returning to the Stream an hour or a day later, not only is the content new but it would be difficult to even find the same permutation of content as before. In other words, with the arrangement of the Stream determined not only chronologically but also algorithmically – as a function of countless parameters, tailored to each person’s data profile – it is a dynamic and ahistoric phenomenon.
+        </p>
+        <p>
+        This disorienting nature of the Stream is a direct consequence of Manuel Castells’ concept of the space of flows: “flows of capital, flows of information, flows of technology, flows of organizational interactions, flows of images, sounds, and symbols” (412). We talked in class on 27 November, building on Harvey Molotch’s “The City as a Growth Machine,” of the physical construction of buildings as a way of “reaching up into” transnational capital flows and “pulling down” some amount, to be solidified and rendered static in the form of (material) development. In a similar sense and in the case of Instagram, for example, taking a picture is a reification of a specific identity in time — but since buildings are solid and (today’s) photos are digital, the “solid” photo belongs to a stream just as fluid as the identities from which it was created. The Instagram feed of photos — “selfies,” friends, landscapes, urban sights, “everyday” images — is a stream of points of view at given times, which are themselves each the products of identity forces at a certain moment.
+        </p>
+
+
+
+
+        <form id="search-form">
+            <input type="text" id="search-qbar"/>
+            <div id="search-results"></div>
+        </form>
+
+
+
+        <script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.9.0/moment.min.js"></script>
+        <script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.0/jquery.min.js"></script>
+        <script>
+
+        (function(self) {
+
+            var test_ajax = function(uri, handler) {
+                var resp = {
+                    articles: [
+                        {
+                            long_headline: "Buchanan Tower Voted Ugliest In The Land",
+                            date: "2015-01-07T14:48:01-0800"
+                        },
+                        {
+                            long_headline: "You'll Never Guess What Toope Just Said",
+                            date: "2014-11-18T09:31:16-0800"
+                        }
+                    ],
+                    videos: [
+                        {
+                            title: "Weekly Show, Jan. 19th",
+                            date: "2015-01-18T20:04:53-0800"
+                        }
+                    ]
+                };
+
+                handler(resp);
+            };
+
+            self.search = (function(self) {
+                var searchform = $("#search-form"),
+                    searchbar = $("#search-qbar"),
+                    resultsbox = $("#search-results");
+
+                var URI_SEARCH = "/api/search";
+
+                var KEYCODE_ENTER = 13,
+                    KEYCODE_ESC = 27;
+
+                var response_handler = function(resp) {
+                    resultsbox.empty();
+                    var parents = {
+                        articles: $("<ul/>").appendTo(resultsbox),
+                        videos: $("<ul/>").appendTo(resultsbox)
+                    };
+
+                    $.each(parents, function(k, el) {
+                        $("<h3/>")
+                            .text(k)
+                            .insertBefore(el);
+
+                        $.each(resp[k], function(i, result) {
+                            $("<li/>")
+                                .append($("<p/>")
+                                    .text(result.long_headline || result.title))
+                                .append($("<p/>")
+                                    .text(moment(result.date).fromNow())
+                                    .addClass("date"))
+                                .appendTo(el);
+                        })
+                    });
+                };
+
+                self.query = function(q) {
+                    if (q) {
+                        test_ajax(URI_SEARCH + "?q=" + encodeURIComponent(q),
+                                  response_handler);
+                    }
+                };
+
+                self.toggle = function() {
+                    var was_hidden = searchform.is(":hidden");
+                    searchform.toggle();
+
+                    if (was_hidden) {
+                        searchbar.focus();
+                    }
+                };
+
+
+                self.init = function() {
+                    // Listen for key to open searchbox
+                    $(document).keydown(function(evt) {
+                        if (evt.keyCode == KEYCODE_ESC) {
+                            self.toggle();
+                        }
+                    });
+
+                    $(document).click(function(evt) {
+                        // Hide on click outside the #searchform
+                        if (!$(evt.target).closest(searchform).length) {
+                            self.toggle();
+                        }
+                    });
+
+                    searchbar.keyup(function(evt) {
+                        self.query(searchbar.val());
+                    });
+
+                    searchform.submit(function(evt) {
+                        evt.preventDefault();
+                    });
+
+                    searchbar.focus();
+                }
+
+                return self;
+            })({});
+
+
+            self.search.init();
+
+        })(window.uby = window.uby || {});
+
+        </script>
+    </body>
+</html>
