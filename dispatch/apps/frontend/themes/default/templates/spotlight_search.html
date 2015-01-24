@@ -38,6 +38,13 @@
             border: 1px solid #bbb;
         }
 
+        #search-noresults {
+            text-align: center;
+            font-style: italic;
+            color: #555;
+            display: none;
+        }
+
         #search-results {
             padding: 5px 15px;
             display: none;
@@ -105,6 +112,7 @@
 
         <form id="search-form">
             <input type="text" id="search-qbar" placeholder="Search"/>
+            <p id="search-noresults">Nothing found</p>
             <div id="search-results"></div>
             <div id="search-preview"></div>
         </form>
@@ -155,12 +163,16 @@
                 var searchform = $("#search-form"),
                     searchbar = $("#search-qbar"),
                     resultsbox = $("#search-results"),
-                    previewbox = $("#search-preview");
+                    previewbox = $("#search-preview"),
+                    noresultsmsg = $("#search-noresults");
 
                 var URI_SEARCH = "/api/search/";
 
                 var KEYCODE_ENTER = 13,
                     KEYCODE_ESC = 27;
+
+                var prev_query = '',
+                    results_cache = {};
 
                 var result_focus_handler = function(evt) {
                     var t = $(evt.target),
@@ -182,16 +194,40 @@
                     li.removeClass("selected");
                 };
 
-                var response_handler = function(resp) {
+                var response_handler = function(data, textStatus, jqXHR) {
+                    return response_render(data, false);
+                };
+
+                var response_render = function(resp, from_cache) {
+                    from_cache = from_cache || false;
+                    if (!from_cache) {
+                        // stash this response, regardless of whether it
+                        // is empty of not
+                        results_cache[prev_query] = resp;
+                    }
+
+                    var resp_had_content = false;
+
                     resultsbox.empty();
                     resultsbox.css("display", "inline-block");
                     previewbox.css("display", "inline-block");
 
                     var parents = {};
                     $.each(resp, function(k, v) {
-                        if (v && v.length)
+                        if (v && v.length) {
                             parents[k] = $("<ul/>").appendTo(resultsbox);
+                            resp_had_content = true;
+                        }
                     });
+
+                    if (!resp_had_content) {
+                        noresultsmsg.show();
+                        resultsbox.hide();
+                        previewbox.hide();
+                        return;
+                    }
+
+                    noresultsmsg.hide();
 
                     var get_text = function(type, obj) {
                         return obj[{
@@ -207,28 +243,36 @@
                             .insertBefore(el);
 
                         $.each(resp[k], function(i, result) {
-                            $("<li/>")
+                            var li = $("<li/>")
                                 .append($("<p/>")
                                     .append($("<a/>")
                                         .text(get_text(k, result))
                                         .focus(result_focus_handler)
                                         .blur(result_blur_handler)
                                         .attr("href", result.uri)))
-                                .append($("<p/>")
-                                    .text(moment(result.date).fromNow())
-                                    .addClass("date"))
                                 .data("preview", result.preview)
                                 .mouseover(result_focus_handler)
                                 .mouseout(result_blur_handler)
                                 .appendTo(el);
+
+                            if (result.hasOwnProperty("published_at")) {
+                                li.append($("<p/>")
+                                    .text(moment(result.published_at).fromNow())
+                                    .addClass("date"));
+                            }
                         })
                     });
                 };
 
                 self.query = function(q) {
                     if (q) {
-                        test_ajax(URI_SEARCH + "?q=" + encodeURIComponent(q),
-                                  response_handler);
+                        if (results_cache.hasOwnProperty(q) && results_cache[q] != {}) {
+                            response_render(results_cache[q], true);
+                        }
+                        else {
+                            test_ajax(URI_SEARCH + "?q=" + encodeURIComponent(q),
+                                      response_handler);
+                        }
                         previewbox.empty();
                     }
                     else {
@@ -263,7 +307,10 @@
                     });
 
                     searchbar.keyup(function(evt) {
-                        self.query(searchbar.val());
+                        var v = searchbar.val();
+                        if (v != prev_query) {
+                            self.query(prev_query = v);
+                        }
                     });
 
                     searchform.submit(function(evt) {
