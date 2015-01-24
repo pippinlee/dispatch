@@ -14,3 +14,6 @@ class DefaultTheme():
             'article': article
         }
         return render_to_response('article.html', context)
+
+    def search(self, request):
+        return render_to_response('spotlight_search.html')

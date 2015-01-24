@@ -13,6 +13,9 @@ router.register(r'tag', views.TagViewSet)
 router.register(r'image', views.ImageViewSet)
 router.register(r'attachment', views.AttachmentViewSet)
 
+router.register(r'section', views.SectionViewSet)
+router.register(r'search', views.SearchViewSet, base_name='search')
+
 
 urlpatterns = patterns('',
     url(r'^admin/', include(adminurls)),

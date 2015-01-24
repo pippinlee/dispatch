@@ -1,9 +1,11 @@
 __author__ = 'Steven Richards'
 from django.contrib.auth import get_user_model
-from dispatch.apps.content.models import Article, Tag, Image, Attachment
+from django.db.models import Q
+from dispatch.apps.content.models import Article, Tag, Image, Attachment, Section
 from dispatch.apps.core.models import Person
 from rest_framework import viewsets
-from dispatch.apps.api.serializers import UserSerializer, ArticleSerializer, ImageSerializer, AttachmentSerializer, TagSerializer, PersonSerializer
+from rest_framework.response import Response
+from dispatch.apps.api.serializers import UserSerializer, ArticleSerializer, ImageSerializer, AttachmentSerializer, TagSerializer, PersonSerializer, SectionSerializer, SearchSerializer
 
 class UserViewSet(viewsets.ModelViewSet):
     """
@@ -39,3 +41,29 @@ class ImageViewSet(viewsets.ModelViewSet):
         if q is not None:
             queryset = queryset.filter(caption__icontains=q)
         return queryset
+
+
+class SectionViewSet(viewsets.ModelViewSet):
+    queryset = Section.objects.all()
+    serializer_class = SectionSerializer
+
+class SearchViewSet(viewsets.ViewSet):
+    def list(self, request):
+        q = self.request.GET.get("q")
+        if not q:
+            return Response({})
+
+        querysets = {
+            "articles": Article.objects.filter(
+                #Q(authors__full_name__icontains=q) |
+                Q(long_headline__icontains=q)
+            ),
+            "sections": Section.objects.filter(
+                name__icontains=q
+            )
+        }
+        serializer = SearchSerializer(querysets, context={"request": request})
+        return Response(serializer.data)
+
+    def retrieve(self, request, pk=None):
+        return self.list(request)
