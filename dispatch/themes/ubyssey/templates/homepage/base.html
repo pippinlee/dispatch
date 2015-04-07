@@ -1,4 +1,7 @@
-{% include 'header.html' %}
+{% extends 'base.html' %}
+
+{% block content %}
+{% include 'header-homepage.html' %}
 
 <div class="container large">
     <div class="frontpage-container">
@@ -84,5 +87,4 @@
     </div>
 </div>
 
-</body>
-</html>
+{% endblock %}
