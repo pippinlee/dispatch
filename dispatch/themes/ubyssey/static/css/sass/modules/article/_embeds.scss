@@ -1,0 +1,69 @@
+@import 'modules/fonts';
+
+.gallery-attachment {
+  margin: 30px 0;
+  .gallery-cover {
+    position: relative;
+    margin-bottom: 4px;
+    img {
+      width: 100%;
+      vertical-align: bottom;
+    }
+    &:hover {
+      cursor: pointer;
+    }
+    div.meta {
+      background-image: linear-gradient(-180deg, rgba(0,0,0,0.00) 1%, rgba(0,0,0,0.88) 99%);
+      position: absolute;
+      pointer-events: none;
+      bottom: 0;
+      width: 100%;
+      box-sizing: border-box;
+      padding: 45px 25px 25px 25px;
+      button {
+        background: rgba(0, 113, 201, 0.7);
+        border: 1px solid #004173;
+        border-radius: 4px;
+        padding: 12px 20px;
+        font-family: "ub-franklin-gothic","ITC Franklin Gothic Std","Helvetica Neue","Helvetica","Arial",sans-serif;
+        font-size: 15px;
+        color: #fff;
+      }
+    }
+    h2 {
+      font-size: 24px;
+      margin-top: 0;
+      margin-bottom: 5px;
+    }
+    span {
+      opacity: 0.8;
+    }
+    h2, span {
+      font-family: $font-default;
+      color: #FFFFFF;
+      font-weight: normal;
+    }
+  }
+  ul.thumbs {
+    list-style-type: none;
+    padding: 0;
+    margin: 0 -2px;
+    li {
+      display: inline-block;
+      width: 25%;
+      height: 100px;
+      box-sizing: border-box;
+      padding: 0 2px;
+      div {
+        width: 100%;
+        height: 100%;
+        background-position: center;
+        background-size: cover;
+        &:hover {
+          cursor: pointer;
+          opacity: 0.8;
+        }
+      }
+    }
+  }
+}
